@@ -8,7 +8,7 @@
 
 一个服务，一个本地网页。官方 ChatGPT、官方 API key 和 Responses 中转按各自的认证方式走；支持 Astra、5.6 Sol、5.6 Terra，能否调用仍取决于你的账号和上游。已有代理软件就填本地 HTTP / SOCKS5 地址，也可以导入自己的订阅或本地文件。
 
-[Windows 上手](docs/windows.md) · [macOS 上手](docs/macos.md) · [面板教程](docs/web-panel.md) · [代理与订阅](docs/proxies.md) · [问题与验收清单](docs/issues-and-verification.md) · [测试记录](docs/testing.md) · [群聊交流](#一起试一起反馈)
+[Windows 上手](docs/windows.md) · [macOS 上手](docs/macos.md) · [Linux 上手](docs/linux.md) · [面板教程](docs/web-panel.md) · [代理与订阅](docs/proxies.md) · [问题与验收清单](docs/issues-and-verification.md) · [测试记录](docs/testing.md) · [群聊交流](#一起试一起反馈)
 
 > **当前仍是公开测试版。** 此 README 描述当前源码；下载时以对应 Release 的说明为准，旧发布包不会自动多出新功能。本轮真实 Sol 回复、V2 远程压缩及压缩后回复、Terra 回复已跑通；追加的两次 Astra 短回复也成功，但本轮仍没有采到合格 292；旧式 V1 压缩直连上游返回 404，Team 仍只做合成测试。不能把部分成功写成全部验收通过。具体边界见[问题与验收清单](docs/issues-and-verification.md)。
 
@@ -16,8 +16,8 @@
 
 先确认 Codex **不经过本工具时原本就能用**。官方账号先登录；中转先配好自己的 API key。用 CCS / CC Switch 的，先选好这次要用的配置，再退出 Codex，暂时别继续切换。
 
-1. 到 [Releases](https://github.com/gylive/ccodex-sleep-state/releases) 下载并完整解压。普通 Windows 选 `windows-amd64`，Windows ARM 选 `windows-arm64`；Apple 芯片 Mac 选 `darwin-arm64`，Intel Mac 选 `darwin-amd64`。
-2. **Windows 双击 `start.cmd`，macOS 双击 `start.command`。** 浏览器会自动打开并进入本地面板，不需要先复制口令。
+1. 到 [Releases](https://github.com/gylive/ccodex-sleep-state/releases) 下载并完整解压。普通 Windows 选 `windows-amd64`，Windows ARM 选 `windows-arm64`；Apple 芯片 Mac 选 `darwin-arm64`，Intel Mac 选 `darwin-amd64`；Linux x86_64 选 `linux-amd64`，Linux ARM64 选 `linux-arm64`。
+2. **Windows 双击 `start.cmd`，macOS 双击 `start.command`，Linux 执行 `./start.sh`。** 浏览器会自动打开并进入本地面板，不需要先复制口令。
 3. 程序会自动备份并接入，打开面板。看到已接管后，**重启 Codex，新建会话**，发一条短消息；不用再点一次接入。旧会话不会被热切换。
 
 已有代理、订阅、模型和注入开关会保留；没有配过来源时尝试识别常见本地代理。首次 `setup` 没有明确设置兜底策略，就采用“采不到 state 时先正常转发”；之前明确选过严格模式的会继续保留。
@@ -36,6 +36,13 @@ macOS：
 
 ```sh
 ./ccodex-sleep-state setup
+```
+
+Linux：
+
+```sh
+chmod +x ccodex-sleep-state start.sh
+./start.sh
 ```
 
 `setup` 会创建缺失的服务配置、启动服务并打开面板；已有订阅和代理设置不会被重置。自动接入只检查本机 `127.0.0.1` 的常见 SOCKS5 端口，不扫描网络、不读取代理软件账号库。**启动本身不发送模型请求**；接入 Codex 后的采集可能消耗额度。服务 JSON 写坏了会进入修复面板，不会因为启动失败就静默删掉旧文件。
@@ -130,13 +137,13 @@ macOS 对应 `./ccodex-sleep-state doctor`。不要发 `auth.json`、管理口�
 
 ## 文件一般放在哪
 
-| 内容 | Windows | macOS |
-| --- | --- | --- |
-| 程序，建议完整解压位置 | `%LOCALAPPDATA%\Programs\ccodex-sleep-state` | `~/Applications/ccodex-sleep-state` |
-| 本工具配置与日志 | `%LOCALAPPDATA%\ccodex-sleep-state` | `~/Library/Application Support/ccodex-sleep-state` |
-| 默认 Codex 配置 | `%USERPROFILE%\.codex\config.toml` | `~/.codex/config.toml` |
-| 接管前备份 | 与 Codex 的 `config.toml` 同目录 | 与 Codex 的 `config.toml` 同目录 |
-| 修复时新增的归档 | 本工具数据目录下的 `backups` | 本工具数据目录下的 `backups` |
+| 内容 | Windows | macOS | Linux |
+| --- | --- | --- | --- |
+| 程序，建议完整解压位置 | `%LOCALAPPDATA%\Programs\ccodex-sleep-state` | `~/Applications/ccodex-sleep-state` | `~/Applications/ccodex-sleep-state` |
+| 本工具配置与日志 | `%LOCALAPPDATA%\ccodex-sleep-state` | `~/Library/Application Support/ccodex-sleep-state` | `${XDG_CONFIG_HOME:-$HOME/.config}/ccodex-sleep-state` |
+| 默认 Codex 配置 | `%USERPROFILE%\.codex\config.toml` | `~/.codex/config.toml` | `~/.codex/config.toml` |
+| 接管前备份 | 与 Codex 的 `config.toml` 同目录 | 与 Codex 的 `config.toml` 同目录 | 与 Codex 的 `config.toml` 同目录 |
+| 修复时新增的归档 | 本工具数据目录下的 `backups` | 本工具数据目录下的 `backups` | 本工具数据目录下的 `backups` |
 
 设置过 `CODEX_HOME` 会跟随它；本工具还有 `CCODEX_STATE_HOME` 和 `--data-dir`。不确定实际用的是哪份，运行 `paths`，不要凭目录名猜。
 

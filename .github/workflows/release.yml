@@ -34,7 +34,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          for target in windows-amd64 windows-arm64 darwin-arm64 darwin-amd64; do
+          for target in windows-amd64 windows-arm64 darwin-arm64 darwin-amd64 linux-amd64 linux-arm64; do
             export GOOS="${target%-*}" GOARCH="${target#*-}"
             name="ccodex-sleep-state-$target"
             mkdir -p "dist/$name"
@@ -45,6 +45,9 @@ jobs:
             cp -R docs "dist/$name/"
             if [ "$GOOS" = windows ]; then
               cp scripts/start.cmd "dist/$name/start.cmd"
+            elif [ "$GOOS" = linux ]; then
+              cp scripts/start.sh "dist/$name/start.sh"
+              chmod +x "dist/$name/start.sh"
             else
               cp scripts/start.command "dist/$name/start.command"
               chmod +x "dist/$name/start.command"
@@ -92,4 +95,4 @@ jobs:
           set -euo pipefail
           gh release create "$VERSION" dist/* --verify-tag --prerelease \
             --title "$VERSION" \
-            --notes '支持 Astra、Sol、Terra 的实验性本地服务。新增双击启动、配置修复、个人/Team 规则和远程压缩兼容。请先阅读本版本测试记录：支持不等于账号具有模型权限，不保证取得指定长度的 state。Windows 和 macOS 包附中文教程与启动脚本；源码包包含锁定依赖和许可证。'
+            --notes '支持 Astra、Sol、Terra 的实验性本地服务。新增配置修复、个人/Team 规则和远程压缩兼容。请先阅读本版本测试记录：支持不等于账号具有模型权限，不保证取得指定长度的 state。Windows、macOS 和 Linux 包附中文教程与启动脚本；源码包包含锁定依赖和许可证。'

@@ -131,7 +131,7 @@
 
 ## Windows 与发布验收
 
-GitHub Actions 在 Windows、macOS、Linux runner 上执行 `go vet`、全包竞态测试和构建。Release 必须等三个系统的验证通过，再生成 Windows x64/ARM64、macOS Apple Silicon/Intel 四种包，以及含依赖的源码包和 SHA256 校验文件。
+GitHub Actions 在 Windows、macOS、Linux runner 上执行 `go vet`、全包竞态测试和构建。Release 必须等三个系统的验证通过，再生成 Windows x64/ARM64、macOS Apple Silicon/Intel、Linux x64/ARM64 六种包，以及含依赖的源码包和 SHA256 校验文件。
 
 [查看对应提交和标签的运行结果](https://github.com/gylive/ccodex-sleep-state/actions)。**Windows runner 测试不是 Windows 桌面版 Codex 的完整实际使用测试。** Windows ARM64、Intel Mac 也尚未各自在桌面环境联调。
 

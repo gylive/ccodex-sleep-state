@@ -56,8 +56,8 @@ go test ./internal/turnstate -fuzz=FuzzParse -fuzztime=10s
 
 ## 发版本
 
-CI 在 Windows、macOS 和 Linux 上跑测试与 `go vet`。发布工作流额外做竞态测试，再交叉构建 Windows x64/ARM64、macOS Apple Silicon/Intel 四个包；附上 SHA256 与包含 vendored 依赖的源码包。
+CI 在 Windows、macOS 和 Linux 上跑测试与 `go vet`。发布工作流额外做竞态测试，再交叉构建 Windows x64/ARM64、macOS Apple Silicon/Intel、Linux x64/ARM64 六个包；附上 SHA256 与包含 vendored 依赖的源码包。
 
-维护者提交带 `v` 前缀的版本标签会触发发布。不要从带私有配置的工作树手工 `zip` 整个目录。发布前应先看完 CI，核对 LICENSE、变更说明、问题验收清单和敏感信息扫描结果。Windows 包将 `scripts/start.cmd` 复制到 exe 同目录；macOS 包同样附上可执行 `scripts/start.command`。测试完实际发布包，不能只测试工作树二进制。
+维护者提交带 `v` 前缀的版本标签会触发发布。不要从带私有配置的工作树手工 `zip` 整个目录。发布前应先看完 CI，核对 LICENSE、变更说明、问题验收清单和敏感信息扫描结果。Windows 包将 `scripts/start.cmd` 复制到 exe 同目录；macOS 和 Linux 包同样附上可执行的启动脚本。测试完实际发布包，不能只测试工作树二进制。
 
 仓库只保留维护所需的源文件、测试和文档；构建缓存、运行目录、日志、私有配置、个人环境快照都不属于版本历史。
