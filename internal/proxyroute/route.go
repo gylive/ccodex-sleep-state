@@ -25,8 +25,8 @@ import (
 	corelog "github.com/metacubex/mihomo/log"
 )
 
-// A route is immutable once loaded. States refer to its index, so a request
-// uses the same egress that supplied its state. Reloads require a restart.
+// A route is immutable once loaded. States refer to its index. A probe-only
+// chain has two transports; ordinary routes share one transport for both uses.
 type Route struct {
 	ID string
 	// StableID identifies connection settings, independent of list order or display name.
@@ -35,7 +35,9 @@ type Route struct {
 	DisplayName string
 	Protocol    string
 	Transport   *http.Transport
-	close       func() error
+	// ProbeTransport is set only for the explicit probe-only chain mode.
+	ProbeTransport *http.Transport
+	close          func() error
 }
 
 var quietOnce sync.Once
@@ -46,6 +48,9 @@ func QuietCore() {
 
 func (r Route) Close() {
 	r.Transport.CloseIdleConnections()
+	if r.ProbeTransport != nil {
+		r.ProbeTransport.CloseIdleConnections()
+	}
 	if r.close != nil {
 		_ = r.close()
 	}
@@ -138,6 +143,12 @@ func nodeIdentity(node map[string]any) (string, error) {
 
 func Load(ctx context.Context, c settings.Config) ([]Route, error) {
 	QuietCore()
+	if c.ChainEnabled() {
+		if err := c.Validate(); err != nil {
+			return nil, err
+		}
+		return BuildProbeChains(*c.ProbeChain)
+	}
 	var routes []Route
 	success := false
 	defer func() {

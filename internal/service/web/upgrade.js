@@ -3,6 +3,7 @@ let advancedDirty=false, advancedRevision=0, policyDirty=false, policyRevision=0
 const advancedFields={request_limit_mib:"request-limit",zstd_window_mib:"window-limit",compact_limit_mib:"compact-limit"};
 let nextPage="configuration",nextFocus="";
 function renderUpgrade(s){
+ if(typeof renderProbeChain === "function") renderProbeChain(s);
  let title="已接上，可以开始使用",help="重启 Codex、新建对话，发一句话即可。无需反复接入。";nextPage="overview";nextFocus="";
  if(s.config_error){title="连接配置还差一步";help=s.config_error;nextPage="configuration";if(s.config_error.includes("base_url")){help="中转地址没填完整。点右边按钮，填写服务商提供的地址，再点“只补全缺失的 base_url”。";nextFocus="relay-base";}}
  else if(s.route_error || !s.routes){title="先加一个可用连接";help="已有代理软件就填本地地址；有多个订阅链接，可以选 TXT 一起导入。";nextPage="sources";}

@@ -27,14 +27,15 @@ type Source struct {
 }
 
 type Config struct {
-	ExternalProxyOnly bool   `json:"external_proxy_only,omitempty"`
-	StateRefreshMode  string `json:"state_refresh_mode,omitempty"`
-	RequestLimitMiB   int    `json:"request_limit_mib,omitempty"`
-	ZstdWindowMiB     int    `json:"zstd_window_mib,omitempty"`
-	CompactLimitMiB   int    `json:"compact_limit_mib,omitempty"`
-	EgressMode        string `json:"egress_mode,omitempty"`
-	EgressRoute       string `json:"egress_route,omitempty"`
-	PoolEnabled       bool   `json:"pool_enabled,omitempty"`
+	ProbeChain        *ProbeChain `json:"probe_chain,omitempty"`
+	ExternalProxyOnly bool        `json:"external_proxy_only,omitempty"`
+	StateRefreshMode  string      `json:"state_refresh_mode,omitempty"`
+	RequestLimitMiB   int         `json:"request_limit_mib,omitempty"`
+	ZstdWindowMiB     int         `json:"zstd_window_mib,omitempty"`
+	CompactLimitMiB   int         `json:"compact_limit_mib,omitempty"`
+	EgressMode        string      `json:"egress_mode,omitempty"`
+	EgressRoute       string      `json:"egress_route,omitempty"`
+	PoolEnabled       bool        `json:"pool_enabled,omitempty"`
 
 	StateFallback        string   `json:"state_fallback,omitempty"`
 	Model                string   `json:"model,omitempty"`
@@ -88,6 +89,14 @@ func Load(path string) (Config, error) {
 }
 
 func (c Config) Validate() error {
+	if c.ChainEnabled() {
+		if err := c.ProbeChain.Validate(); err != nil {
+			return err
+		}
+		if c.PoolEnabled || c.PinnedRoute != "" || c.EgressRoute != "" || (c.EgressMode != "" && c.EgressMode != "state") {
+			return errors.New("采集链式模式使用固定本地代理，请关闭随机/固定节点及用后移出策略")
+		}
+	}
 	if c.StateRefreshMode != "" && c.StateRefreshMode != "standby" && c.StateRefreshMode != "on_demand" {
 		return errors.New("state 策略必须为 standby 或 on_demand")
 	}

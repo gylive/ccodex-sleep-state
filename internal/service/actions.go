@@ -42,6 +42,9 @@ type sourceRequest struct {
 
 func (c *control) candidate(v sourceRequest) (settings.Config, error) {
 	next := c.config
+	if next.ChainEnabled() {
+		return next, errors.New("采集链式模式正在使用独立的本地代理和落地出口；请先关闭该模式，再修改原代理池来源")
+	}
 	if !v.Append {
 		next.Direct = false
 		next.ProxyURLs = []string{}
@@ -142,6 +145,9 @@ func (c *control) api(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	fail := func(err error) { reply(w, 400, map[string]string{"error": err.Error()}) }
 	switch r.URL.Path {
+	case "/admin/api/probe-chain", "/admin/api/probe-chain/test":
+		c.chainAPI(w, r, ctx)
+		return
 	case "/admin/api/advanced", "/admin/api/pool", "/admin/api/pool/change":
 		c.poolAPI(w, r, ctx)
 		return
@@ -493,6 +499,10 @@ func (c *control) api(w http.ResponseWriter, r *http.Request) {
 		}
 		reply(w, 200, map[string]string{"message": "出口已应用，不需要重启服务。旧 state 已清空，下次 Codex 请求会按新出口重新采集。"})
 	case "/admin/api/routes", "/admin/api/routes/test", "/admin/api/routes/pin":
+		if c.config.ChainEnabled() && r.URL.Path == "/admin/api/routes/pin" {
+			fail(errors.New("采集链式模式已固定本地代理，请先关闭该模式再切换旧版路由"))
+			return
+		}
 		var v struct {
 			ID string `json:"id"`
 		}

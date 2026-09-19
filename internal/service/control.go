@@ -244,6 +244,7 @@ func (c *control) status() map[string]any {
 	result["state_fallback"] = c.config.StateFallback
 	result["state_refresh_mode"] = c.config.StateRefreshMode
 	result["advanced"] = advancedFrom(c.config)
+	result["probe_chain"] = c.chainStatus()
 	if c.pool != nil && c.pool.Err() != nil {
 		result["pool_error"] = c.pool.Err().Error()
 	}

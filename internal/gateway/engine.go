@@ -375,7 +375,11 @@ func (e *Engine) probe(parent context.Context, h http.Header, route proxyroute.R
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "text/event-stream")
 	// A probe has no prior state and no conversation/session chain.
-	client := &http.Client{Transport: route.Transport, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	transport := route.Transport
+	if route.ProbeTransport != nil {
+		transport = route.ProbeTransport
+	}
+	client := &http.Client{Transport: transport, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	resp, err := client.Do(req)
 	if err != nil {
 		return turnstate.Token{}, 0, 0, errProbeTransport

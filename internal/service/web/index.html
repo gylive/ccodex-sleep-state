@@ -8,6 +8,7 @@
     <script src="/admin/app.js" defer></script>
     <script src="/admin/upgrade.js" defer></script>
     <script src="/admin/environment_check.js" defer></script>
+    <script src="/admin/chain.js" defer></script>
   </head>
   <body>
     <header>
@@ -398,6 +399,24 @@
           <div id="route-result" class="result" hidden></div>
         </section>
         <section data-view="pool" hidden>
+		  <section class="card">
+		    <h2>仅采集使用链式代理</h2>
+		    <p>采集 state：本工具 → 本地 Clash → 落地代理 → 上游。正常回复、压缩和模型列表：本工具 → 本地 Clash → 上游。</p>
+		    <form id="probe-chain-form">
+		      <label><input id="probe-chain-enabled" type="checkbox" /> 启用采集专用链式代理</label>
+		      <label for="probe-chain-local">本地 Clash 代理地址</label><input id="probe-chain-local" type="password" autocomplete="off" spellcheck="false" placeholder="http://127.0.0.1:7897" />
+		      <small>填写 Clash 实际 HTTP / SOCKS5 监听地址。留空保留已保存值；本地端口须能连接落地代理。</small>
+		      <label for="probe-chain-protocol">落地代理协议（地址未带协议时使用）</label><select id="probe-chain-protocol"><option value="http">HTTP</option><option value="socks5">SOCKS5</option><option value="https">HTTPS</option></select>
+		      <label for="probe-chain-exit">落地代理账号和地址（每行一个）</label><textarea id="probe-chain-exit" rows="5" autocomplete="off" spellcheck="false" placeholder="user1:passwd1@host1:port1&#10;user2:passwd2@host2:port2"></textarea>
+		      <small>每行一个出口；支持 user:passwd@host:port，@ 前不用加反斜杠，也支持完整代理 URL。空行和 # 开头的行会忽略。留空保留已保存出口。</small>
+              <label><input id="probe-chain-append" type="checkbox" checked /> 追加到已保存出口（取消则替换整组）</label>
+		      <p id="probe-chain-status" class="hint" role="status"></p>
+		      <div class="actions"><button id="probe-chain-test" type="button" class="secondary">测试链式连接，不调用模型</button><button type="submit">保存链式设置</button></div>
+		      <p id="probe-chain-result" class="result" role="status"></p>
+		    </form>
+		    <p class="hint">此模式仅供本工具使用，无需修改 Clash 规则或系统代理。开启后暂停原代理池来源、关闭随机出口及用后移出；关闭后恢复原来源，出口策略仍为采集同出口。账号密码保存在本机服务配置及备份中，不在面板回显。</p>
+		    <p class="hint">通过落地出口采到 292，不保证换回本地 Clash 出口后仍可使用。采集仍遵守冷却及 401/403/429 停止规则；中转/API 通道及关闭注入时不采集。该模式无法让原本不能访问上游的本地代理独立完成正式回复。</p>
+		  </section>
           <p class="eyebrow">节点生命周期</p><h1>可用、已用、失败，分开管理。</h1>
           <p>记录按节点配置标识，不按国家名或公网 IP。已用/失败节点不会自动回池；重新导入相同节点仍保留记录。清理是停用，可再次手动放回，不修改订阅地址。</p>
           <button id="reload-pool">刷新本地代理池</button>

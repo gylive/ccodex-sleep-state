@@ -162,7 +162,9 @@ func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	// Manual removal must apply even in legacy cycling mode and to compact/
 	// metadata requests, not just to new state probes.
-	if e.pool.Get(e.routes[route].ID).State == "disabled" {
+	// In probe-only chain mode, disabled landing nodes stop collection on that
+	// node, not ordinary traffic through the independent local first hop.
+	if e.routes[route].ProbeTransport == nil && e.pool.Get(e.routes[route].ID).State == "disabled" {
 		fail(w, 503, "pool_node_disabled", "所选出口已停用，请在代理池手动放回或选择其他出口")
 		return
 	}

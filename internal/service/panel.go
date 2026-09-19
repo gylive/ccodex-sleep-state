@@ -86,6 +86,8 @@ func controlHandler(host, token string, c *control, tickets ...*browserTicket) h
 				file, mime = "upgrade.js", "text/javascript; charset=utf-8"
 			case "/admin/environment_check.js":
 				file, mime = "environment_check.js", "text/javascript; charset=utf-8"
+			case "/admin/chain.js":
+				file, mime = "chain.js", "text/javascript; charset=utf-8"
 			case "/admin/app.js":
 				file, mime = "app.js", "text/javascript; charset=utf-8"
 			case "/admin/style.css":

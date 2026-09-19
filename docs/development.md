@@ -45,6 +45,7 @@ go test ./internal/turnstate -fuzz=FuzzParse -fuzztime=10s
 | `proxy_urls` / `proxy_envs` | 空 | 直接代理 URI / 存放 URI 的环境变量名 |
 | `subscriptions` | 空 | `{url}` 或 `{url_env}` 列表；每项可设置 `user_agent`、`include_protocols`、`exclude_keywords` |
 | `subscription_proxy_env` | 空 | 仅订阅下载使用的代理变量 |
+| `probe_chain` | 未设置 | `{enabled,local_proxy,exit_proxies}`：仅 state 采集通过本地回环代理再连接一个或多个落地代理，正式请求只走本地代理；启用时停用随机出口及用后移出，原来源保留 |
 | `probe_timeout_seconds` | `20` | 单次探测超时，1–60 秒 |
 | `max_probes_per_round` | `6` | 每轮最多尝试出口数，1–20；单轮不重复同一出口 |
 | `probe_cooldown_seconds` | `180` | 两轮采集最小间隔，30–3600 秒 |
