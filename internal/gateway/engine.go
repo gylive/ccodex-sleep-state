@@ -19,6 +19,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"unicode"
 
 	"github.com/gylive/ccodex-sleep-state/internal/proxyroute"
 	"github.com/gylive/ccodex-sleep-state/internal/routepool"
@@ -81,13 +82,28 @@ func New(c settings.Config, routes []proxyroute.Route, logger *slog.Logger, pool
 	e.disabled.Store(c.InjectionDisabled || c.IsRelay())
 	return e
 }
+
+// The state calibration list is not an upstream model access policy.
+// Auxiliary models retain their own session and credential-wide rejection guard.
+func validRequestModel(model string) bool {
+	if model == "" || len(model) > 256 {
+		return false
+	}
+	for _, r := range model {
+		if unicode.IsSpace(r) || unicode.IsControl(r) {
+			return false
+		}
+	}
+	return true
+}
+
 func (e *Engine) borrow(h http.Header, models ...string) (*session, error) {
 	model := e.config.SelectedModel()
 	if len(models) > 0 {
 		model = models[0]
 	}
-	if !settings.SupportedModel(model) {
-		return nil, errors.New("unsupported model")
+	if !validRequestModel(model) {
+		return nil, errors.New("invalid model")
 	}
 	auth := h.Get("Authorization")
 	if !strings.HasPrefix(auth, "Bearer ") || len(strings.TrimSpace(strings.TrimPrefix(auth, "Bearer "))) < 8 || len(auth) > 16384 {
@@ -204,7 +220,7 @@ func (e *Engine) backgroundWork(now time.Time) []*session {
 
 func (e *Engine) refresh(ctx context.Context, s *session, bootstrap bool, only ...int) {
 	epoch := e.injectionEpoch.Load()
-	if e.disabled.Load() || e.pool.Err() != nil {
+	if !settings.SupportedModel(s.model) || e.disabled.Load() || e.pool.Err() != nil {
 		return
 	}
 	s.mu.Lock()
