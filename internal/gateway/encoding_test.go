@@ -132,13 +132,13 @@ func TestBadCompressedRequestsNeverReachUpstream(t *testing.T) {
 }
 
 func TestCompressedJSONStillValidatesModel(t *testing.T) {
-	e, _ := testEngine(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { t.Error("unsupported model reached upstream") }))
-	wire := encodeRequest(t, "zstd", []byte(strings.ReplaceAll(generation, "gpt-6-astra", "unknown-model")))
+	e, _ := testEngine(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { t.Error("invalid model reached upstream") }))
+	wire := encodeRequest(t, "zstd", []byte(strings.ReplaceAll(generation, "gpt-6-astra", "")))
 	r := request(string(wire), "bad-model-token")
 	r.Header.Set("Content-Encoding", "zstd")
 	w := httptest.NewRecorder()
 	e.ServeHTTP(w, r)
-	if w.Code != 400 || !strings.Contains(w.Body.String(), "unsupported_model") {
+	if w.Code != 400 || !strings.Contains(w.Body.String(), "invalid_model") {
 		t.Fatalf("status=%d body=%s", w.Code, w.Body.String())
 	}
 }

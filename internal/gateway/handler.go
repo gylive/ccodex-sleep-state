@@ -75,8 +75,8 @@ func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				fail(w, 400, "invalid_json", "Expected a JSON request.")
 				return
 			}
-			if !settings.SupportedModel(input.Model) {
-				fail(w, 400, "unsupported_model", "支持 gpt-6-astra、gpt-5.6-sol 和 gpt-5.6-terra；请在 Codex 中选择受支持的模型。")
+			if !validRequestModel(input.Model) {
+				fail(w, 400, "invalid_model", "Expected a non-empty model identifier of at most 256 bytes without whitespace or control characters.")
 				return
 			}
 			model = input.Model
@@ -109,7 +109,11 @@ func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	// Compaction has its own upstream protocol. Do not require a synthetic
 	// generation probe or apply response-state shape rules to its result.
-	inject := generation && !compact && !e.disabled.Load()
+	stateModel := settings.SupportedModel(model)
+	inject := generation && !compact && stateModel && !e.disabled.Load()
+	if generation && !stateModel {
+		w.Header().Set("X-Sleep-State-Mode", "model-passthrough")
+	}
 	if inject {
 		s.mu.Lock()
 		s.activated = true
@@ -188,7 +192,7 @@ func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			pr.Out.URL.RawPath = ""
 			pr.Out.Host = target.Host
-			if e.config.IsRelay() {
+			if e.config.IsRelay() || !stateModel {
 				pr.Out.Header.Del(turnstate.Header)
 			}
 			pr.Out.Header.Del("Cookie")
@@ -209,7 +213,7 @@ func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Transport: e.routes[route].Transport, FlushInterval: -1, ErrorLog: log.New(io.Discard, "", 0),
 		ModifyResponse: func(resp *http.Response) error {
 			resp.Header.Del("Set-Cookie")
-			if e.config.IsRelay() {
+			if e.config.IsRelay() || !stateModel {
 				resp.Header.Del(turnstate.Header)
 			}
 			if resp.StatusCode == 503 {

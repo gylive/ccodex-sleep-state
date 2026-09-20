@@ -173,7 +173,7 @@ func TestCredentialIsolation(t *testing.T) {
 func TestUnsupportedRequestsDoNotReachUpstream(t *testing.T) {
 	var calls atomic.Int32
 	e, _ := testEngine(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { calls.Add(1) }))
-	for _, body := range []string{`{"model":"other-model"}`, `{"input":"missing model"}`, `broken`} {
+	for _, body := range []string{`{"model":"not supported"}`, `{"model":""}`, `{"input":"missing model"}`, `broken`} {
 		w := httptest.NewRecorder()
 		e.ServeHTTP(w, request(body, "synthetic-account-token"))
 		if w.Code != 400 {

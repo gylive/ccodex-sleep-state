@@ -72,6 +72,8 @@ macOS：
 
 自动识别使用当前请求里的套餐提示，提示不明确时会说明采用了什么规则；不会仅凭长度把账号认成 Team。你也可以在面板明确选个人或 Team。state 按账号、凭据和模型隔离，不在 Astra、Sol、Terra 之间混用。
 
+上述模型列表只限定本工具的 state 采集与注入。Codex 自动审批等辅助请求使用其他模型时，服务保留模型名和正文原样转发，不探测、不注入或回传 state；模型是否可用及请求是否获准由上游判断。鉴权与 401/403/429 暂停规则仍适用，服务不会在本地代替审批。
+
 没有合格 state 时有两种选择：
 
 - **严格模式。** 不使用不合格 state；采集失败返回明确原因。明确选过 `strict`，之后 `setup` 不会自动覆盖。底层转发在策略为空时仍按严格处理。
@@ -128,7 +130,7 @@ macOS 对应 `./ccodex-sleep-state doctor`。不要发 `auth.json`、管理口�
 
 ## 用之前知道这些边界
 
-- 支持的模型是 **`gpt-6-astra`、`gpt-5.6-sol`、`gpt-5.6-terra`**，上游必须实际提供对应模型。工具不会替你开通权限，也不会悄悄换模型。
+- 支持 state 采集与注入的模型是 **`gpt-6-astra`、`gpt-5.6-sol`、`gpt-5.6-terra`**；其他合法模型名按透传处理，上游必须实际提供对应模型。工具不会替你开通权限，也不会悄悄换模型。
 - 目前走 **Responses HTTP / SSE**，不支持 WebSocket 和任意协议转换。
 - 采集会使用实际额度。默认每轮最多 6 个候选出口，单次探测最多 20 秒，两轮至少间隔 180 秒。正常生成请求不自动重放。
 - 代理支持 HTTP、HTTPS、SOCKS5，以及 Clash/Mihomo YAML、逐行 URI、Base64 URI 订阅。内嵌出站适配支持 AnyTLS、SS、SSR、VMess、VLESS、Trojan、Hysteria、Hysteria2、TUIC；不导入订阅的 TUN、DNS 或系统规则。[具体限制](docs/proxies.md)

@@ -299,7 +299,7 @@ func TestUnusableTeamShapeCannotChangePersonalPolicy(t *testing.T) {
 func TestMetricsCountRejectedRequestsWithoutSession(t *testing.T) {
 	e, _ := testEngine(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { t.Fatal("request should fail locally") }))
 	w := httptest.NewRecorder()
-	e.ServeHTTP(w, request(`{"model":"not-supported"}`, "metric-token"))
+	e.ServeHTTP(w, request(`{"model":"not supported"}`, "metric-token"))
 	status := e.Status()
 	if status["requests_total"] != uint64(1) || status["last_request_unix"].(int64) == 0 || len(e.sessions) != 0 {
 		t.Fatalf("missing request evidence: %+v", status)
