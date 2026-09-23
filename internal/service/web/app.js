@@ -179,9 +179,10 @@ async function refresh() {
     if (session.retry_after_seconds)
       description += " · 还需等待约 " + session.retry_after_seconds + " 秒";
     description += session.model ? " · " + session.model : "";
-    description += session.expected_length
-      ? " · 目标 " + session.expected_length
-      : "";
+    const acceptedLengths = (session.accepted_lengths || [session.expected_length])
+      .filter(Boolean)
+      .join(" / ");
+    description += acceptedLengths ? " · 接纳 " + acceptedLengths : "";
     const row = textNode("div", "", "session");
     const detail = textNode("div", description);
     for (const note of [session.account_note, session.diagnostic_message])
@@ -198,7 +199,7 @@ async function refresh() {
       detail.append(
         textNode(
           "p",
-          `最近收到 ${session.observed_length} 字符；当前目标 ${session.expected_length}。`,
+          `最近收到 ${session.observed_length} 字符；当前接纳 ${acceptedLengths}。`,
           "hint",
         ),
       );

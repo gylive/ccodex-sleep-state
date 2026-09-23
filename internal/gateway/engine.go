@@ -14,6 +14,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -144,7 +145,7 @@ func (e *Engine) borrow(h http.Header, models ...string) (*session, error) {
 			e.limits[credentialKey] = limit
 		}
 		policy := policyFor(e.config, h)
-		s = &session{id: rand.Text(), model: model, policy: policy, limit: limit, headers: safe, state: turnstate.New(turnstate.Policy{Blocks: policy.Blocks, TTL: time.Duration(e.config.TTLSeconds) * time.Second, Refresh: time.Duration(e.config.RefreshSeconds) * time.Second})}
+		s = &session{id: rand.Text(), model: model, policy: policy, limit: limit, headers: safe, state: turnstate.New(turnstate.Policy{Blocks: policy.AcceptedBlocks, TTL: time.Duration(e.config.TTLSeconds) * time.Second, Refresh: time.Duration(e.config.RefreshSeconds) * time.Second})}
 		s.state.HoldActive(e.onDemand.Load())
 		e.sessions[key] = s
 	}
@@ -300,7 +301,7 @@ func (e *Engine) refresh(ctx context.Context, s *session, bootstrap bool, only .
 			switch {
 			case accepted:
 				result = "accepted"
-			case token.Blocks != s.policy.Blocks:
+			case !slices.Contains(s.policy.AcceptedBlocks, token.Blocks):
 				result = "shape_mismatch"
 			default:
 				result = "state_time_rejected"
@@ -329,7 +330,7 @@ func (e *Engine) refresh(ctx context.Context, s *session, bootstrap bool, only .
 		// Shape metadata explains a rejected probe without exposing its token.
 		e.log.Info("probe_finished", "route", e.routes[route].ID, "status", status,
 			"accepted", accepted, "result", result, "state_blocks", token.Blocks,
-			"expected_blocks", s.policy.Blocks, "model", s.model)
+			"expected_blocks", s.policy.Blocks, "accepted_blocks", s.policy.AcceptedBlocks, "model", s.model)
 		// Preserve upstream account limits rather than converting them to a
 		// generic "no state" error or moving on to another egress.
 		if rejected {
@@ -659,7 +660,7 @@ func diagnosticMessage(code string, p accountPolicy, observed int) string {
 	case "accepted":
 		return "已采到符合当前规则的 state；这不等于验证了模型质量。"
 	case "shape_mismatch":
-		return fmt.Sprintf("出口有响应，但 state 为 %d 块，当前规则要求 %d 块（约 %d 字符）。请先核对个人 / Team 选择；换出口不保证得到目标长度。", observed, p.Blocks, p.Length)
+		return fmt.Sprintf("出口有响应，但 state 为 %d 块，当前规则接纳 %s。请先核对个人 / Team 选择；换出口不保证得到目标长度。", observed, p.shapeDescription())
 	case "state_time_rejected":
 		return "state 已过期或时间异常；请检查本机时间，等待冷却后重新采集。"
 	case "missing_state_header":

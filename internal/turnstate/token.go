@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"slices"
 	"strings"
 	"time"
 )
@@ -15,7 +16,7 @@ import (
 const Header = "X-Codex-Turn-State"
 
 type Policy struct {
-	Blocks       int
+	Blocks       []int
 	TTL, Refresh time.Duration
 }
 type Token struct {
@@ -47,5 +48,5 @@ func Parse(value string) (Token, error) {
 }
 
 func (p Policy) Accept(t Token, now time.Time) bool {
-	return t.Value != "" && t.Blocks == p.Blocks && !t.Issued.After(now.Add(30*time.Second)) && now.Before(t.Issued.Add(p.TTL-30*time.Second))
+	return t.Value != "" && slices.Contains(p.Blocks, t.Blocks) && !t.Issued.After(now.Add(30*time.Second)) && now.Before(t.Issued.Add(p.TTL-30*time.Second))
 }

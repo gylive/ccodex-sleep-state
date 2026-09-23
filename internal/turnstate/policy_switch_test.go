@@ -7,7 +7,7 @@ import (
 
 func TestHoldActiveUntilRejectedOrExpired(t *testing.T) {
 	now := time.Now().Truncate(time.Second)
-	s := New(Policy{10, time.Hour, 20 * time.Minute})
+	s := New(Policy{[]int{10}, time.Hour, 20 * time.Minute})
 	a, _ := Parse(synthetic(10, now.Add(-45*time.Minute), 1))
 	b, _ := Parse(synthetic(10, now, 2))
 	s.Offer(a, 0, now)
@@ -35,7 +35,7 @@ func TestHoldActiveUntilRejectedOrExpired(t *testing.T) {
 }
 func TestHoldDoesNotExtendExpiry(t *testing.T) {
 	now := time.Now().Truncate(time.Second)
-	s := New(Policy{10, time.Hour, 20 * time.Minute})
+	s := New(Policy{[]int{10}, time.Hour, 20 * time.Minute})
 	a, _ := Parse(synthetic(10, now, 1))
 	s.Offer(a, 0, now)
 	s.HoldActive(true)

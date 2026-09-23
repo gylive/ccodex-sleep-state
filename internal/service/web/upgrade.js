@@ -23,7 +23,7 @@ function renderUpgrade(s){
  }
  if(!policyDirty && document.activeElement!==$("state-policy")) $("state-policy").value=s.state_refresh_mode||"standby";
  const selected=$("pool-session").value;$("pool-session").replaceChildren(new Option("请选择现有模型会话",""));
- for(const session of s.sessions||[]) $("pool-session").add(new Option(`${session.model} · ${session.expected_length||"规则待识别"} · ${phases[session.phase]||session.phase}`,session.id));
+ for(const session of s.sessions||[]) $("pool-session").add(new Option(`${session.model} · ${(session.accepted_lengths||[session.expected_length]).filter(Boolean).join(" / ")||"规则待识别"} · ${phases[session.phase]||session.phase}`,session.id));
  if([...$("pool-session").options].some(o=>o.value===selected))$("pool-session").value=selected;
  else if(s.sessions?.length===1)$("pool-session").value=s.sessions[0].id;
 }
