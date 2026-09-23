@@ -17,7 +17,7 @@ func synthetic(blocks int, at time.Time, marker byte) string {
 }
 func TestEnvelopePolicy(t *testing.T) {
 	now := time.Now().Truncate(time.Second)
-	policy := Policy{10, time.Hour, 20 * time.Minute}
+	policy := Policy{[]int{10}, time.Hour, 20 * time.Minute}
 	for _, tc := range []struct {
 		name   string
 		blocks int
@@ -44,7 +44,7 @@ func TestEnvelopePolicy(t *testing.T) {
 }
 func TestReadyPromotionAndRequestSnapshot(t *testing.T) {
 	now := time.Now()
-	s := New(Policy{10, time.Hour, 20 * time.Minute})
+	s := New(Policy{[]int{10}, time.Hour, 20 * time.Minute})
 	a, _ := Parse(synthetic(10, now, 1))
 	b, _ := Parse(synthetic(10, now.Add(time.Second), 2))
 	if !s.Offer(a, 0, now) {
@@ -76,7 +76,7 @@ func TestReadyPromotionAndRequestSnapshot(t *testing.T) {
 }
 func TestObservationCannotPublish(t *testing.T) {
 	now := time.Now()
-	s := New(Policy{10, time.Hour, 20 * time.Minute})
+	s := New(Policy{[]int{10}, time.Hour, 20 * time.Minute})
 	s.Observe(synthetic(10, now, 1), Snapshot{}, now)
 	if _, ok := s.Acquire(now); ok {
 		t.Fatal("response observation became active")
@@ -88,7 +88,7 @@ func TestObservationCannotPublish(t *testing.T) {
 }
 func TestStoreConcurrent(t *testing.T) {
 	now := time.Now()
-	s := New(Policy{10, time.Hour, 20 * time.Minute})
+	s := New(Policy{[]int{10}, time.Hour, 20 * time.Minute})
 	var wg sync.WaitGroup
 	for i := 0; i < 32; i++ {
 		wg.Add(1)
@@ -107,6 +107,7 @@ func TestStoreConcurrent(t *testing.T) {
 func FuzzParse(f *testing.F) {
 	f.Add("not-a-token")
 	f.Add(synthetic(10, time.Unix(1800000000, 0), 0))
+	f.Add(synthetic(33, time.Unix(1800000000, 0), 0))
 	f.Fuzz(func(t *testing.T, value string) {
 		token, err := Parse(value)
 		if err == nil && (token.Blocks < 1 || token.Value == "") {

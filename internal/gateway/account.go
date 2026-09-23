@@ -3,6 +3,7 @@ package gateway
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -12,11 +13,13 @@ import (
 // accountPolicy is a local collection heuristic, never proof of a subscription
 // or of model quality. The upstream remains responsible for authentication.
 type accountPolicy struct {
-	Mode   string `json:"account_mode"`
-	Source string `json:"account_source"`
-	Blocks int    `json:"expected_blocks"`
-	Length int    `json:"expected_length"`
-	Note   string `json:"account_note"`
+	Mode            string `json:"account_mode"`
+	Source          string `json:"account_source"`
+	Blocks          int    `json:"expected_blocks"`
+	Length          int    `json:"expected_length"`
+	AcceptedBlocks  []int  `json:"accepted_blocks"`
+	AcceptedLengths []int  `json:"accepted_lengths"`
+	Note            string `json:"account_note"`
 }
 
 func policyFor(c settings.Config, h http.Header) accountPolicy {
@@ -35,7 +38,24 @@ func policyFor(c settings.Config, h http.Header) accountPolicy {
 		p.Blocks = 12
 	}
 	p.Length = base64.URLEncoding.EncodedLen(57 + 16*p.Blocks)
+	p.AcceptedBlocks = []int{p.Blocks}
+	// Issue #13 reports a 33-block envelope for personal and Team accounts.
+	// Keep explicit legacy custom baselines exact; do not learn rules from responses.
+	if p.Mode != "custom" {
+		p.AcceptedBlocks = append(p.AcceptedBlocks, 33)
+	}
+	for _, blocks := range p.AcceptedBlocks {
+		p.AcceptedLengths = append(p.AcceptedLengths, base64.URLEncoding.EncodedLen(57+16*blocks))
+	}
 	return p
+}
+
+func (p accountPolicy) shapeDescription() string {
+	shapes := make([]string, 0, len(p.AcceptedBlocks))
+	for i, blocks := range p.AcceptedBlocks {
+		shapes = append(shapes, fmt.Sprintf("%d 块（约 %d 字符）", blocks, p.AcceptedLengths[i]))
+	}
+	return strings.Join(shapes, " 或 ")
 }
 
 func planHint(h http.Header) string {
